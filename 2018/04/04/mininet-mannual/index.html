@@ -88,7 +88,7 @@
 <meta property="og:site_name" content="坤少">
 <meta property="og:description" content="初学者使用mininet往往走不少弯路，mininet的资源广而多，有的技巧在用不到的时候就出现了，而等到用到的时候就怎么找也找不到了。记笔记的好习惯确实帮助记性差的自己走了许多弯路。 MininetMininet是一款适用于SDN环境的网络仿真器，可以创建出网络中的主机、交换机和设备之间的网络链路。Mininet采用了多进程虚拟化和名字空间技术，可以运行标准的Linux网络应用，支持OpenFl">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-04-04T07:17:57.430Z">
+<meta property="og:updated_time" content="2018-04-04T07:45:51.720Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="mininet仿真实验中可能用到的技术细节">
 <meta name="twitter:description" content="初学者使用mininet往往走不少弯路，mininet的资源广而多，有的技巧在用不到的时候就出现了，而等到用到的时候就怎么找也找不到了。记笔记的好习惯确实帮助记性差的自己走了许多弯路。 MininetMininet是一款适用于SDN环境的网络仿真器，可以创建出网络中的主机、交换机和设备之间的网络链路。Mininet采用了多进程虚拟化和名字空间技术，可以运行标准的Linux网络应用，支持OpenFl">
@@ -384,42 +384,52 @@
 <h2 id="Mininet"><a href="#Mininet" class="headerlink" title="Mininet"></a>Mininet</h2><p>Mininet是一款适用于SDN环境的网络仿真器，可以创建出网络中的主机、交换机和设备之间的网络链路。Mininet采用了多进程虚拟化和名字空间技术，可以运行标准的Linux网络应用，支持OpenFlow网络环境的搭建，被广泛的用在SDN的仿真实验中。</p>
 <p>Mininet作为开源的网络仿真工具，可以提供一个简单的OpenFlow实验平台，允许多个开发者在同样的网络协议下实现相互独立测试，可以模拟出复杂的网络环境，虚拟化地址空间的方式大大降低了实验成本。同时，Mininet还提供了用户命令接口来运行和调试网络。</p>
 <h3 id="技术细节列表"><a href="#技术细节列表" class="headerlink" title="技术细节列表"></a>技术细节列表</h3><ul>
-<li><p>启用命令行接口:</p>
-<figure class="highlight plain"><figcaption><span>CLI```</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">- 启动wireshar：</span><br><span class="line">```wireshark &amp;``` or ```sudo wireshark```其中第二项是首选项，在第二项失效的情况下再去选择第一项</span><br><span class="line">- 针对每个节点进行参数配置：</span><br><span class="line">```mininet &gt; h1 ifconfig -a</span><br></pre></td></tr></table></figure>
+<li><p>启用命令行接口: mininet&gt;:mininet CLI</p>
 </li>
-<li><p>设置链路信息：</p>
-<figure class="highlight plain"><figcaption><span>mn --link tc,bw</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">- 设置mac地址(保证每次创建时，MAC地址不变)：</span><br><span class="line">```sudo mn --mac</span><br></pre></td></tr></table></figure>
+<li><p>启动wireshark：wireshark &amp;或者是sudo wireshark，其中第二项是首选项，在第二项失效的情况下再去选择第一项</p>
 </li>
-<li><p>打开图形界面：</p>
-<figure class="highlight plain"><figcaption><span>mn -x```</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">- mininet中使用python解释器：</span><br><span class="line">```mininet &gt; py &apos;hello&apos;+&apos;world&apos;</span><br></pre></td></tr></table></figure>
+<li><p>针对每个节点进行参数配置： mininet &gt; h1 ifconfig -a</p>
 </li>
-<li><p>断开、建立链路：</p>
-<figure class="highlight plain"><figcaption><span>> link s1 h1 down``` or ```mininet > link s1 h1 up```</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">- 打开主机h1的终端：</span><br><span class="line">```xterm h1</span><br></pre></td></tr></table></figure>
+<li><p>设置链路信息： sudo mn –link tc,bw=10,delay=10ms</p>
 </li>
-<li><p>连接远程控制器：</p>
-<figure class="highlight plain"><figcaption><span>mn --controller</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">- 直接运行python实例：</span><br><span class="line">```sudo python example.py</span><br></pre></td></tr></table></figure>
+<li><p>设置mac地址(保证每次创建时，MAC地址不变)： sudo mn –mac</p>
+</li>
+<li><p>打开图形界面：sudo mn -x</p>
+</li>
+<li><p>mininet中使用python解释器： mininet &gt; py ‘hello’+’world’</p>
+</li>
+<li><p>断开、建立链路： mininet &gt; link s1 h1 down 或者 mininet &gt; link s1 h1 up</p>
+</li>
+<li><p>打开主机h1的终端： xterm h1</p>
+</li>
+<li><p>连接远程控制器：sudo mn –controller=remote,ip=127.0.0.1,port=6633</p>
+</li>
+<li><p>直接运行python实例： sudo python example.py</p>
 </li>
 </ul>
 <h2 id="OVS"><a href="#OVS" class="headerlink" title="OVS"></a>OVS</h2><p>说道Mininet，就不得不提OVS（Open vSwitch），OVS是在开源的Apache2.0许可下的产品级质量的多层虚拟交换标准，支持OpenFlow协议。Open vSwitch是一种开源软件，专门管理多租赁公共云计算环境，为网络管理员提供虚拟VM之间和之内的流量可见性和控制。</p>
 <h3 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h3><ul>
-<li><p>交换机端查看连接端口名和版本:</p>
-<figure class="highlight plain"><figcaption><span>show```</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">- 交换机端查看端口：</span><br><span class="line">```#ovs-dpctl show</span><br></pre></td></tr></table></figure>
+<li><p>交换机端查看连接端口名和版本: #ovs-vsctl show</p>
 </li>
-<li><p>为交换机设定openflow版本：</p>
-<figure class="highlight plain"><figcaption><span>set Bridge s1 protocols</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">- 检查流表：</span><br><span class="line">```ovs-ofctl -O OpenFlow13 dump-flows s1</span><br></pre></td></tr></table></figure>
+<li><p>交换机端查看端口： #ovs-dpctl show</p>
 </li>
-<li><p>设置OVS端口为access并设置vlan号：</p>
-<figure class="highlight plain"><figcaption><span>> sh ovs-vsctl set port s1-eth1 tag 10```</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">- 设置OVS端口为tru nk并设置vlan号：</span><br><span class="line">```mininet &gt; sh ovs-vsctl set port s1-eth2 trunks=10,20</span><br></pre></td></tr></table></figure>
+<li><p>为交换机设定openflow版本：ovs-vsctl set Bridge s1 protocols=OpenFlow13</p>
+</li>
+<li><p>检查流表： ovs-ofctl -O OpenFlow13 dump-flows s1</p>
+</li>
+<li><p>设置OVS端口为access并设置vlan号： mininet &gt; sh ovs-vsctl set port s1-eth1 tag 10</p>
+</li>
+<li><p>设置OVS端口为tru nk并设置vlan号： mininet &gt; sh ovs-vsctl set port s1-eth2 trunks=10,20</p>
 </li>
 </ul>
 <h2 id="Iperf"><a href="#Iperf" class="headerlink" title="Iperf"></a>Iperf</h2><p>iperf是一个开源的网络性能测试工具，通常用来测试TCP或是UDP连接的网络带宽。iperf可以测量最大TCP带宽，具有多种参数和UDP特性，可以报告带宽、时延和抖动等参数。</p>
 <h3 id="常用命令-1"><a href="#常用命令-1" class="headerlink" title="常用命令"></a>常用命令</h3><ul>
-<li>查看版本:<figure class="highlight plain"><figcaption><span>--version```</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">- 采用UDP模式测试带宽：</span><br><span class="line">server端：```iperf -u -s```；</span><br><span class="line">client端：```iperf -u -c serverIP -b 1--M -t 60</span><br></pre></td></tr></table></figure>
+<li><p>查看版本: iperf –version</p>
 </li>
-</ul>
-<p>其中-u表示UDP模式，-s表示以server模式运行，-c表示以client模式运行，-b表示带宽，-t表示发送的时间。</p>
-<ul>
-<li>产生网络流量：<br><code>mininet &gt; iperfudp 1G h1 h2</code></li>
+<li><p>采用UDP模式测试带宽：<br>server端： iperf -u -s<br>client端： iperf -u -c serverIP -b 1–M -t 60<br>其中-u表示UDP模式，-s表示以server模式运行，-c表示以client模式运行，-b表示带宽，-t表示发送的时间。</p>
+</li>
+<li><p>产生网络流量： mininet &gt; iperfudp 1G h1 h2</p>
+</li>
 </ul>
 <h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>暂时先整理这么多吧，清明假期就要来了，浪一浪~</p>
 <h3 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h3><ul>
