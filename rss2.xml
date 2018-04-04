@@ -8,11 +8,11 @@
     <atom:link href="/rss2.xml" rel="self" type="application/rss+xml"/>
     
     <description>个人博客</description>
-    <pubDate>Wed, 04 Apr 2018 07:45:51 GMT</pubDate>
+    <pubDate>Wed, 04 Apr 2018 07:48:40 GMT</pubDate>
     <generator>http://hexo.io/</generator>
     
     <item>
-      <title>mininet仿真实验中可能用到的技术细节</title>
+      <title>mininet仿真实验中可能用到的小窍门合集</title>
       <link>http://prayallforyou.top/2018/04/04/mininet-mannual/</link>
       <guid>http://prayallforyou.top/2018/04/04/mininet-mannual/</guid>
       <pubDate>Wed, 04 Apr 2018 06:28:39 GMT</pubDate>
