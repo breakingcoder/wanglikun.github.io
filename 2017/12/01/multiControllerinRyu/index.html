@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+  <link rel="alternate" href="/rss2.xml" title="坤少" type="application/atom+xml" />
+
+
+
+
+
+
+<meta name="description" content="SDN中的多控制器架构随着网络规模的扩大和管理方式的多样化，传统SDN中的单控制器模式逐渐显露出弊端和缺陷。其中单控制器模式中存在的一大威胁就是单点故障问题，一旦出现故障就导致全网瘫痪。为了克服单控制器的先天性缺陷，各种方案被提出。多控制器架构作为一种被广泛认可的方式得到了快速的发张，相应的出现了多个演化方向。控制器之间可以是平等关系，两两相互通信，也可以是层级关系，上层控制器负责管理下层的控制器">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用Ryu搭建控制器集群">
+<meta property="og:url" content="http://prayallforyou.top/2017/12/01/multiControllerinRyu/index.html">
+<meta property="og:site_name" content="坤少">
+<meta property="og:description" content="SDN中的多控制器架构随着网络规模的扩大和管理方式的多样化，传统SDN中的单控制器模式逐渐显露出弊端和缺陷。其中单控制器模式中存在的一大威胁就是单点故障问题，一旦出现故障就导致全网瘫痪。为了克服单控制器的先天性缺陷，各种方案被提出。多控制器架构作为一种被广泛认可的方式得到了快速的发张，相应的出现了多个演化方向。控制器之间可以是平等关系，两两相互通信，也可以是层级关系，上层控制器负责管理下层的控制器">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://prayallforyou.top/iamges/compare.jpg">
+<meta property="og:updated_time" content="2017-12-02T01:03:29.053Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="使用Ryu搭建控制器集群">
+<meta name="twitter:description" content="SDN中的多控制器架构随着网络规模的扩大和管理方式的多样化，传统SDN中的单控制器模式逐渐显露出弊端和缺陷。其中单控制器模式中存在的一大威胁就是单点故障问题，一旦出现故障就导致全网瘫痪。为了克服单控制器的先天性缺陷，各种方案被提出。多控制器架构作为一种被广泛认可的方式得到了快速的发张，相应的出现了多个演化方向。控制器之间可以是平等关系，两两相互通信，也可以是层级关系，上层控制器负责管理下层的控制器">
+<meta name="twitter:image" content="http://prayallforyou.top/iamges/compare.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.3',
+    sidebar: {"position":"left","display":"hide","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '7MUQNB7OV7',
+      apiKey: '0519b903fd4116475fe9f60e0313cdce',
+      indexName: 'blog_prayallforyou.top',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"输入要搜索内容的关键字","hits_empty":"未找到 ${query} 的相关内容","hits_stats":"共发现 ${hits} 条符合条件的结果，耗时 ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://prayallforyou.top/2017/12/01/multiControllerinRyu/"/>
+
+
+
+
+
+  <title>使用Ryu搭建控制器集群 | 坤少</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">坤少</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">A heart that loves is always young</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  
+  <div class="algolia-popup popup search-popup">
+    <div class="algolia-search">
+      <div class="algolia-search-input-icon">
+        <i class="fa fa-search"></i>
+      </div>
+      <div class="algolia-search-input" id="algolia-search-input"></div>
+    </div>
+
+    <div class="algolia-results">
+      <div id="algolia-stats"></div>
+      <div id="algolia-hits"></div>
+      <div id="algolia-pagination" class="algolia-pagination"></div>
+    </div>
+
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+  </div>
+
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://prayallforyou.top/2017/12/01/multiControllerinRyu/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="王立坤">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="坤少">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">使用Ryu搭建控制器集群</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-01T21:07:11+08:00">
+                2017-12-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+             <span id="/2017/12/01/multiControllerinRyu/" class="leancloud_visitors" data-flag-title="使用Ryu搭建控制器集群">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="SDN中的多控制器架构"><a href="#SDN中的多控制器架构" class="headerlink" title="SDN中的多控制器架构"></a>SDN中的多控制器架构</h2><p>随着网络规模的扩大和管理方式的多样化，传统SDN中的单控制器模式逐渐显露出弊端和缺陷。其中单控制器模式中存在的一大威胁就是单点故障问题，一旦出现故障就导致全网瘫痪。为了克服单控制器的先天性缺陷，各种方案被提出。多控制器架构作为一种被广泛认可的方式得到了快速的发张，相应的出现了多个演化方向。控制器之间可以是平等关系，两两相互通信，也可以是层级关系，上层控制器负责管理下层的控制器。<br>两种架构方式可以简单的以下图表示：<img src="/iamges/compare.jpg" alt=""><br>其中图（1）表示控制器间平等的架构方式，不存在超级控制节点，各个控制器可以相同通信，当然也可以采用选举的方式选择一个管理节点来更好地协同调度。图（2）展示了多层级（两层）的控制器架构。上层控制器管理下层控制器，最底层控制器管理实际的网络设备。接下来就重点介绍一下两层控制器架构的搭建方法。</p>
+<h2 id="主从式控制器集群搭建"><a href="#主从式控制器集群搭建" class="headerlink" title="主从式控制器集群搭建"></a>主从式控制器集群搭建</h2><p>化繁就简，本文实现了一种最为简单的主从式控制器demo。采用CS架构。上层存在一个超级控制器作为服务端接收客户端上传的数据，下层存在做个控制器作为客户端和超级节点建立连接，提供数据给上层节点并执行上层节点的决策。</p>
+<h3 id="超级控制器作为服务端"><a href="#超级控制器作为服务端" class="headerlink" title="超级控制器作为服务端"></a>超级控制器作为服务端</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line">&quot;&quot;&quot;</span><br><span class="line">description:</span><br><span class="line">    A superController process as a Server to normal controlles.</span><br><span class="line">author:</span><br><span class="line">    wanglikun</span><br><span class="line">date:</span><br><span class="line">    v0: 2017/12/01</span><br><span class="line">&quot;&quot;&quot;</span><br><span class="line"></span><br><span class="line">from ryu.base import app_manager</span><br><span class="line">from ryu.controller import ofp_event</span><br><span class="line">from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER</span><br><span class="line">from ryu.controller.handler import set_ev_cls</span><br><span class="line">from ryu.ofproto import ofproto_v1_3</span><br><span class="line">from ryu.lib import hub</span><br><span class="line">import sys</span><br><span class="line">import os</span><br><span class="line">import setting</span><br><span class="line">import logging</span><br><span class="line">import socket</span><br><span class="line">from threading import Thread</span><br><span class="line">import socket</span><br><span class="line">socketList = &#123;&#125;</span><br><span class="line">maxConnectionNum = 3</span><br><span class="line"></span><br><span class="line">#wait socket connection</span><br><span class="line">def waitConnect(server):</span><br><span class="line">    while True:</span><br><span class="line">        connection,address = server.accept()</span><br><span class="line">        if connection not in socketList:</span><br><span class="line">            socketList.setdefault(connection,[])</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"># main function, set up a server socket to listen connection from clients</span><br><span class="line">def main():</span><br><span class="line">    server = socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)</span><br><span class="line">    if os.path.exists(&apos;/tmp/ryu_superControler.sock&apos;):</span><br><span class="line">        os.unlink(&apos;/tmp/ryu_superControler.sock&apos;)</span><br><span class="line">    server.bind(&apos;/tmp/ryu_superControler.sock&apos;)</span><br><span class="line">    server.listen(1024)</span><br><span class="line">    waitThread = Thread(target=waitConnect,args=(server,))</span><br><span class="line">    waitThread.start()</span><br><span class="line">    print &quot;waiting at least a client connection&quot;</span><br><span class="line">    # guarantee all controllers are connected,then process them.</span><br><span class="line">    while len(socketList) != maxConnectionNum:</span><br><span class="line">        pass</span><br><span class="line">    print &quot;All controllers are connected to Super Controller!&quot;</span><br><span class="line">    for client in socketList:</span><br><span class="line">        print client</span><br><span class="line">    while True:</span><br><span class="line">        #do what you what</span><br><span class="line">    #disconncet all connections</span><br><span class="line">    for con in socketList:</span><br><span class="line">        con.close()</span><br><span class="line"></span><br><span class="line">if __name__ == &quot;__main__&quot;:</span><br><span class="line">    main()</span><br></pre></td></tr></table></figure>
+<h3 id="正常控制器作为客户端"><a href="#正常控制器作为客户端" class="headerlink" title="正常控制器作为客户端"></a>正常控制器作为客户端</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">&quot;&quot;&quot;</span><br><span class="line">description:</span><br><span class="line">A load calculation module to the controller, calculate the rate of Packet_In</span><br><span class="line">message per second, and decide wether to communicate with other controller</span><br><span class="line">according to threshold.</span><br><span class="line">author:</span><br><span class="line">wanglikun</span><br><span class="line">date:</span><br><span class="line">v0: 2017/11/28</span><br><span class="line">&quot;&quot;&quot;</span><br><span class="line"></span><br><span class="line">from ryu.base import app_manager</span><br><span class="line">from ryu.controller import ofp_event</span><br><span class="line">from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER</span><br><span class="line">from ryu.controller.handler import set_ev_cls</span><br><span class="line">from ryu.ofproto import ofproto_v1_3</span><br><span class="line">from ryu.lib import hub</span><br><span class="line">import sys</span><br><span class="line">import socket</span><br><span class="line">from threading import Thread</span><br><span class="line">import setting</span><br><span class="line">import logging</span><br><span class="line"></span><br><span class="line">class LoadBalancer(app_manager.RyuApp):</span><br><span class="line">    OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]</span><br><span class="line">    def __init__(self, *args, **kwargs):</span><br><span class="line">        super(LoadBalancer, self).__init__(*args, **kwargs)</span><br><span class="line">        self.daemon_thread = hub.spawn(self._detect) # Start a green thread to calculate the load.</span><br><span class="line">        #self.loadCom_peri = hub.spawn(self._comthread) # start a thread to communicate with other controller process</span><br><span class="line">        self.com_thread = Thread(target=self._comthread)</span><br><span class="line">        self.com_thread.start()</span><br><span class="line"></span><br><span class="line">    #do what you want in a thread function.</span><br><span class="line">    def _detect(self):</span><br><span class="line">        while True:</span><br><span class="line">            # do something....</span><br><span class="line"></span><br><span class="line">    # recv funcion in a socketList</span><br><span class="line">    def client_recv_fuc(self,client):</span><br><span class="line">        data = client.recv(1024).decode(&apos;utf-8&apos;)</span><br><span class="line">        print &quot;received data from server:%s&quot;%data</span><br><span class="line"></span><br><span class="line">    #communication thread</span><br><span class="line">    def _comthread(self):</span><br><span class="line">        self.logger.info(&quot;periodically communication is running...&quot;)</span><br><span class="line">        client = socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)</span><br><span class="line">        client.connect(&apos;/tmp/ryu_superControler.sock&apos;)</span><br><span class="line">        print &quot;Conncected super Controler succeed&quot;</span><br><span class="line">        Thread(target=self.client_recv_fuc,args=(client,)).start()</span><br><span class="line">        while True:</span><br><span class="line">            # do what you want and send them to server</span><br><span class="line"> </span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)</span><br><span class="line">    def switch_features_handler(self, ev):</span><br><span class="line">        datapath = ev.msg.datapath</span><br><span class="line">        ofproto = datapath.ofproto</span><br><span class="line">        parser = datapath.ofproto_parser</span><br><span class="line"></span><br><span class="line">        match = parser.OFPMatch()</span><br><span class="line">        actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,</span><br><span class="line">                                          ofproto.OFPCML_NO_BUFFER)]</span><br><span class="line">        self.add_flow(datapath, 0, match, actions)</span><br><span class="line"></span><br><span class="line">    def add_flow(self, datapath, priority, match, actions, buffer_id=None):</span><br><span class="line">        ofproto = datapath.ofproto</span><br><span class="line">        parser = datapath.ofproto_parser</span><br><span class="line"></span><br><span class="line">        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,</span><br><span class="line">                                             actions)]</span><br><span class="line">        if buffer_id:</span><br><span class="line">            mod = parser.OFPFlowMod(datapath=datapath, buffer_id=buffer_id,</span><br><span class="line">                                    priority=priority, match=match,</span><br><span class="line">                                    instructions=inst)</span><br><span class="line">        else:</span><br><span class="line">            mod = parser.OFPFlowMod(datapath=datapath, priority=priority,</span><br><span class="line">                                    match=match, instructions=inst)</span><br><span class="line">        datapath.send_msg(mod)</span><br><span class="line"></span><br><span class="line">    @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)</span><br><span class="line">    def packet_in_handler(self, ev):</span><br><span class="line">        msg = ev.msg</span><br><span class="line">        datapath = msg.datapath</span><br><span class="line">        ofproto = datapath.ofproto</span><br><span class="line">        ......</span><br></pre></td></tr></table></figure>
+<p>这样一个简单的多控制器集群模式就搭建好了，是不是不难。接下来就是底层网络拓扑的构建了。</p>
+<h2 id="Mininet构建底层网络"><a href="#Mininet构建底层网络" class="headerlink" title="Mininet构建底层网络"></a>Mininet构建底层网络</h2><p>Mininet作为一个模拟网络拓扑的工具，这次自然逃脱不了。其中<strong>呈神</strong>的一篇博客——<a href="http://www.muzixing.com/pages/2015/08/05/mininetda-jian-duo-kong-zhi-qi-tuo-bu.html" target="_blank" rel="external">Mininet搭建多控制器拓扑</a>，做了充分的说明。再此借鉴其中的代码搭建一个简单的面向多控制器的网络拓扑。</p>
+<h3 id="面向多控制器的网络拓扑"><a href="#面向多控制器的网络拓扑" class="headerlink" title="面向多控制器的网络拓扑"></a>面向多控制器的网络拓扑</h3><p>简单讲就是对一个网络中的交换机进行了逻辑分片，其属于同一分片的交换机连接同一个控制器，不同分片的交换机连接不同的控制器。下面代码定义了一个由9个交换机做成的网络中，分别有三个控制器（每个控制器控制三个交换机）控制的网络。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br></pre></td><td class="code"><pre><span class="line">#!/usr/bin/python</span><br><span class="line">from mininet.net import Mininet</span><br><span class="line">from mininet.node import Controller, RemoteController, OVSSwitch</span><br><span class="line">from mininet.cli import CLI</span><br><span class="line">from mininet.log import setLogLevel, info</span><br><span class="line">from mininet.link import Link, Intf, TCLink</span><br><span class="line">from mininet.topo import Topo</span><br><span class="line">import logging</span><br><span class="line">import os</span><br><span class="line"></span><br><span class="line">def multiControllerNet(con_num=3, sw_num=9, host_num=18):</span><br><span class="line">        &quot;Create a network from semi-scratch with multiple controllers.&quot;</span><br><span class="line">        controller_list = []</span><br><span class="line">        switch_list = []</span><br><span class="line">        host_list = []</span><br><span class="line"></span><br><span class="line">        net = Mininet(controller=None, switch=OVSSwitch, link=TCLink)</span><br><span class="line"></span><br><span class="line">        for i in xrange(con_num):</span><br><span class="line">            name = &apos;controller%s&apos; % str(i)</span><br><span class="line">            c = net.addController(name, controller=RemoteController,</span><br><span class="line">                                  port=6661 + i)</span><br><span class="line">            controller_list.append(c)</span><br><span class="line">            print &quot;*** Creating %s&quot; % name</span><br><span class="line"></span><br><span class="line">        print &quot;*** Creating switches&quot;</span><br><span class="line">        switch_list = [net.addSwitch(&apos;s%d&apos; % n) for n in xrange(sw_num)]</span><br><span class="line"></span><br><span class="line">        print &quot;*** Creating hosts&quot;</span><br><span class="line">        host_list = [net.addHost(&apos;h%d&apos; % n) for n in xrange(host_num)]</span><br><span class="line"></span><br><span class="line">        print &quot;*** Creating links of host2switch.&quot;</span><br><span class="line">        for i in xrange(0, sw_num):</span><br><span class="line">            net.addLink(switch_list[i], host_list[i*2])</span><br><span class="line">            net.addLink(switch_list[i], host_list[i*2+1])</span><br><span class="line"></span><br><span class="line">        print &quot;*** Creating interior links of switch2switch.&quot;</span><br><span class="line">        for i in xrange(0, sw_num, sw_num/con_num):</span><br><span class="line">            for j in xrange(sw_num/con_num):</span><br><span class="line">                for k in xrange(sw_num/con_num):</span><br><span class="line">                    if j != k and j &gt; k:</span><br><span class="line">                        net.addLink(switch_list[i+j], switch_list[i+k])</span><br><span class="line"></span><br><span class="line">        print &quot;*** Creating intra links of switch2switch.&quot;</span><br><span class="line"></span><br><span class="line">        # 0-2  3-5 6-8</span><br><span class="line">        # domain1 -&gt; others</span><br><span class="line">        net.addLink(switch_list[0], switch_list[3])</span><br><span class="line">        net.addLink(switch_list[2], switch_list[4])</span><br><span class="line"></span><br><span class="line">        # domain2 -&gt; others</span><br><span class="line">        net.addLink(switch_list[5], switch_list[8])</span><br><span class="line">        net.addLink(switch_list[4], switch_list[6])</span><br><span class="line"></span><br><span class="line">        # domain3 -&gt; others</span><br><span class="line">        net.addLink(switch_list[7], switch_list[1])</span><br><span class="line">        net.addLink(switch_list[6], switch_list[2])</span><br><span class="line"></span><br><span class="line">        print &quot;*** Starting network&quot;</span><br><span class="line">        net.build()</span><br><span class="line">        for c in controller_list:</span><br><span class="line">            c.start()</span><br><span class="line"></span><br><span class="line">        _No = 0</span><br><span class="line">        for i in xrange(0, sw_num, sw_num/con_num):</span><br><span class="line">            for j in xrange(sw_num/con_num):</span><br><span class="line">                switch_list[i+j].start([controller_list[_No]])</span><br><span class="line">            _No += 1</span><br><span class="line"></span><br><span class="line">        #print &quot;*** Testing network&quot;</span><br><span class="line">        #net.pingAll()</span><br><span class="line"></span><br><span class="line">        print &quot;*** Running CLI&quot;</span><br><span class="line">        CLI(net)</span><br><span class="line"></span><br><span class="line">        print &quot;*** Stopping network&quot;</span><br><span class="line">        net.stop()</span><br><span class="line"></span><br><span class="line">if __name__ == &apos;__main__&apos;:</span><br><span class="line">        setLogLevel(&apos;info&apos;)  # for CLI output</span><br><span class="line">        multiControllerNet(con_num=3, sw_num=9, host_num=18)</span><br></pre></td></tr></table></figure>
+<h2 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h2><p>编写脚本启动三个控制器<em>multiControllersSetup.sh</em>。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/bash</span><br><span class="line">for i in $(seq 1 3);</span><br><span class="line">  do</span><br><span class="line">  let port=i+6660</span><br><span class="line">  xterm -title &quot;app$i&quot; -hold -e ryu-manager ~/ryu/myRyuApplication/loadCal --ofp-tcp-listen-port=$port</span><br><span class="line">  done</span><br></pre></td></tr></table></figure></p>
+<p>在测试中使用脚本启动控制器的时候会发现，有的应用程序可以启动所有的控制器窗口，而有的应用启动起来一个窗口后就会阻塞住。虽然不知道什么原因，但可以采用一种曲线救国的方式达到目的。启动多个终端，在终端中输入要启动的控制器就好了。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo ryu-manager ryu/APP/module --ofp-tcp-listen-port=portnumber</span><br></pre></td></tr></table></figure></p>
+<p>其中<em>ryu/APP/module</em>表示应用程序所在的目录，<em>portnumber</em>表示要启动的端口号。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>刚接触多控制器的论文时都是比较抵触的，心里总想着即便有Idea，如何进行试验仿真？现在回过头来看看，也就那么回事。</p>
+<h3 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h3><ul>
+<li><a href="http://www.muzixing.com/pages/2015/08/05/mininetda-jian-duo-kong-zhi-qi-tuo-bu.html" target="_blank" rel="external">Mininet搭建多控制器拓扑</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>久旱逢甘霖，您的支持是作者前进的不竭动力</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechat.jpg" alt="王立坤 微信支付"/>
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/images/alipay.jpg" alt="王立坤 支付宝"/>
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/11/29/scapy/" rel="next" title="scapy伪造数据包模拟网络攻击行为">
+                <i class="fa fa-chevron-left"></i> scapy伪造数据包模拟网络攻击行为
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/04/01/ryuRouting/" rel="prev" title="Ryu实现链路故障路由">
+                Ryu实现链路故障路由 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+      <div id="uyan_frame"></div>
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">王立坤</p>
+              <p class="site-description motion-element" itemprop="description">个人博客</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/rss2.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#SDN中的多控制器架构"><span class="nav-number">1.</span> <span class="nav-text">SDN中的多控制器架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#主从式控制器集群搭建"><span class="nav-number">2.</span> <span class="nav-text">主从式控制器集群搭建</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#超级控制器作为服务端"><span class="nav-number">2.1.</span> <span class="nav-text">超级控制器作为服务端</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#正常控制器作为客户端"><span class="nav-number">2.2.</span> <span class="nav-text">正常控制器作为客户端</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Mininet构建底层网络"><span class="nav-number">3.</span> <span class="nav-text">Mininet构建底层网络</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#面向多控制器的网络拓扑"><span class="nav-number">3.1.</span> <span class="nav-text">面向多控制器的网络拓扑</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#测试"><span class="nav-number">4.</span> <span class="nav-text">测试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">5.</span> <span class="nav-text">小结</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#参考："><span class="nav-number">5.1.</span> <span class="nav-text">参考：</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">王立坤</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+    
+
+    
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid=2148708"></script>
+      <!-- UY END -->
+    
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+
+
+
+  
+
+
+
+
+  
+  
+  
+  <link rel="stylesheet" href="/lib/algolia-instant-search/instantsearch.min.css">
+
+  
+  
+  <script src="/lib/algolia-instant-search/instantsearch.min.js"></script>
+  
+
+  <script src="/js/src/algolia-search.js?v=5.1.3"></script>
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("r6GYjXglMtJqYlR6mRTpjHFT-gzGzoHsz", "pa15vcmIA3oqXC7A2LADwYyn");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

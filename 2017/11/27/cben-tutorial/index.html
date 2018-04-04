@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+  <link rel="alternate" href="/rss2.xml" title="坤少" type="application/atom+xml" />
+
+
+
+
+
+
+<meta name="description" content="前期准备在SDN环境中有各种各样的控制器（OpenDaylight、ONOS、Ryu、Floodlight、POX、NOX），其中Ryu小巧简易，是科学研究的重要选择之一。SDN三层架构，其中南向接口的标准最为统一，OpenFlow几乎以绝对优势霸占了南向接口，本篇主要讲解使用Ryu+mininet的环境下如何测试控制器的吞吐量性能。  如果你还有还是正想尝试搭建我所说的Ryu控制器，安利一篇博客">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SDN环境下使用cbench测试ryu控制器性能">
+<meta property="og:url" content="http://prayallforyou.top/2017/11/27/cben-tutorial/index.html">
+<meta property="og:site_name" content="坤少">
+<meta property="og:description" content="前期准备在SDN环境中有各种各样的控制器（OpenDaylight、ONOS、Ryu、Floodlight、POX、NOX），其中Ryu小巧简易，是科学研究的重要选择之一。SDN三层架构，其中南向接口的标准最为统一，OpenFlow几乎以绝对优势霸占了南向接口，本篇主要讲解使用Ryu+mininet的环境下如何测试控制器的吞吐量性能。  如果你还有还是正想尝试搭建我所说的Ryu控制器，安利一篇博客">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2017-11-27T08:30:32.045Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="SDN环境下使用cbench测试ryu控制器性能">
+<meta name="twitter:description" content="前期准备在SDN环境中有各种各样的控制器（OpenDaylight、ONOS、Ryu、Floodlight、POX、NOX），其中Ryu小巧简易，是科学研究的重要选择之一。SDN三层架构，其中南向接口的标准最为统一，OpenFlow几乎以绝对优势霸占了南向接口，本篇主要讲解使用Ryu+mininet的环境下如何测试控制器的吞吐量性能。  如果你还有还是正想尝试搭建我所说的Ryu控制器，安利一篇博客">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.3',
+    sidebar: {"position":"left","display":"hide","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '7MUQNB7OV7',
+      apiKey: '0519b903fd4116475fe9f60e0313cdce',
+      indexName: 'blog_prayallforyou.top',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"输入要搜索内容的关键字","hits_empty":"未找到 ${query} 的相关内容","hits_stats":"共发现 ${hits} 条符合条件的结果，耗时 ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://prayallforyou.top/2017/11/27/cben-tutorial/"/>
+
+
+
+
+
+  <title>SDN环境下使用cbench测试ryu控制器性能 | 坤少</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">坤少</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">A heart that loves is always young</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  
+  <div class="algolia-popup popup search-popup">
+    <div class="algolia-search">
+      <div class="algolia-search-input-icon">
+        <i class="fa fa-search"></i>
+      </div>
+      <div class="algolia-search-input" id="algolia-search-input"></div>
+    </div>
+
+    <div class="algolia-results">
+      <div id="algolia-stats"></div>
+      <div id="algolia-hits"></div>
+      <div id="algolia-pagination" class="algolia-pagination"></div>
+    </div>
+
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+  </div>
+
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://prayallforyou.top/2017/11/27/cben-tutorial/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="王立坤">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="坤少">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">SDN环境下使用cbench测试ryu控制器性能</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-11-27T15:15:22+08:00">
+                2017-11-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+             <span id="/2017/11/27/cben-tutorial/" class="leancloud_visitors" data-flag-title="SDN环境下使用cbench测试ryu控制器性能">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="前期准备"><a href="#前期准备" class="headerlink" title="前期准备"></a>前期准备</h2><p>在SDN环境中有各种各样的控制器（OpenDaylight、ONOS、Ryu、Floodlight、POX、NOX），其中Ryu小巧简易，是科学研究的重要选择之一。SDN三层架构，其中南向接口的标准最为统一，OpenFlow几乎以绝对优势霸占了南向接口，本篇主要讲解使用Ryu+mininet的环境下如何测试控制器的吞吐量性能。</p>
+<ul>
+<li><p>如果你还有还是正想尝试搭建我所说的Ryu控制器，安利一篇博客：<a href="http://blog.csdn.net/u010558281/article/details/53558086" target="_blank" rel="external">Ubuntu系统源码安装SDN控制器之ryu</a>，方便快捷。</p>
+</li>
+<li><p>安装mininet就更简单了，大家可以自行去官网寻求帮助。</p>
+</li>
+<li><p>cbench当然也要安装了，怎么安装呢？在安利一篇吧<a href="https://www.zybuluo.com/wuzhimang/note/398736" target="_blank" rel="external">Cbench最新安装说明</a>,这里说明一点，如果你之前下载安装了完整的mininet，会很自然地省去好多步骤（实践实践就知道了）。</p>
+</li>
+</ul>
+<p>这篇重点是讲cbench的使用，所以到现在就假设你已经把环境搭建好了，进入正题之前，做个约定：Ryu安装在Ryu目录下，Mininet在Mininet目录下，Cbench在oflop目录下。</p>
+<h2 id="吞吐量性能测试"><a href="#吞吐量性能测试" class="headerlink" title="吞吐量性能测试"></a>吞吐量性能测试</h2><p>如何测试呢，用心的Ryu开发人员已经帮我们把脚本写好了，在目录Ryu/ryu/app/下有一个文件cbench.py，这个文件就是用来测试控制器性能的，打开文件，我们可以看到可读性很高的代码。(反正也不长，我就全粘过来了，~.~)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">&quot;&quot;&quot;</span><br><span class="line">A dumb OpenFlow 1.0 responder for benchmarking the controller framework.</span><br><span class="line">Intended to be used with oflops cbench.</span><br><span class="line">&quot;&quot;&quot;</span><br><span class="line"></span><br><span class="line">from ryu.base import app_manager</span><br><span class="line">from ryu.controller import ofp_event</span><br><span class="line">from ryu.controller.handler import MAIN_DISPATCHER</span><br><span class="line">from ryu.controller.handler import set_ev_cls</span><br><span class="line">from ryu.ofproto import ofproto_v1_0</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">class Cbench(app_manager.RyuApp):</span><br><span class="line">    OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION]</span><br><span class="line"></span><br><span class="line">    def __init__(self, *args, **kwargs):</span><br><span class="line">        super(Cbench, self).__init__(*args, **kwargs)</span><br><span class="line"></span><br><span class="line">    @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)</span><br><span class="line">    def packet_in_handler(self, ev):</span><br><span class="line">        msg = ev.msg</span><br><span class="line">        datapath = msg.datapath</span><br><span class="line">        ofproto = datapath.ofproto</span><br><span class="line"></span><br><span class="line">        match = datapath.ofproto_parser.OFPMatch(</span><br><span class="line">            ofproto_v1_0.OFPFW_ALL, 0, 0, 0,</span><br><span class="line">            0, 0, 0, 0, 0, 0, 0, 0, 0)</span><br><span class="line"></span><br><span class="line">        mod = datapath.ofproto_parser.OFPFlowMod(</span><br><span class="line">            datapath, match=match, cookie=0, command=ofproto.OFPFC_ADD,</span><br><span class="line">            idle_timeout=0, hard_timeout=0,</span><br><span class="line">            priority=ofproto.OFP_DEFAULT_PRIORITY,</span><br><span class="line">            flags=0, actions=None)</span><br><span class="line">        datapath.send_msg(mod)</span><br></pre></td></tr></table></figure>
+<p>可以看到Cbench的工作原理也很简单，就是测量控制器处理PacketIn数据包的能力，当数据流流经交换机发现没有已经安装好的指令的时候，相关的交换机就会向控制器发送PacketIn消息请求控制器处理。</p>
+<p>Cbench的用法也很简单，找到Cbench的运行目录<strong>oflops/cbench</strong>，执行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./cbench --help</span><br></pre></td></tr></table></figure></p>
+<p>就能查看使用说明了，在<a href="http://www.sdnlab.com/2334.html" target="_blank" rel="external">SDN控制器性能测试工具Cbench安装与使用说明</a>也想中文说明。</p>
+<p>如果测试一个交换机是吞吐性能的测试命令为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cbench -c ip -p port -s 1 -m 1000 -t</span><br></pre></td></tr></table></figure></p>
+<p>其中ip即为Ryu控制器的运行机器的ip，port即为mininet和控制器相连的端口，通常默认为6653。</p>
+<h2 id="脚本简化工作量"><a href="#脚本简化工作量" class="headerlink" title="脚本简化工作量"></a>脚本简化工作量</h2><p>测试性能，就需要全方位多角度考察，举个简单地例子，我们可以测试控制器连接不同的交换机时处理能力会不会收到影响。以1-10个交换机为例，可以写脚本如下。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/bash</span><br><span class="line">ip=127.0.0.1</span><br><span class="line">port=6653</span><br><span class="line">cycle=1000</span><br><span class="line">mode=-t</span><br><span class="line">for i in $(seq 1 10);</span><br><span class="line">  do</span><br><span class="line">  cbench -c $&#123;ip&#125; -p $&#123;port&#125; -s $&#123;i&#125; -m $&#123;cycle&#125; $&#123;mode&#125; &gt; ./cbench_s$&#123;i&#125;</span><br><span class="line">  done</span><br></pre></td></tr></table></figure></p>
+<p>上面的脚本就是分别测试控制器连接不同交换机是的最大吞吐量，分别对结果写入到命名为cbech_s1、cbech_s2、… 、cbech_s10的文件中。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>Cbench，一个优秀的基于OpenFlow的性能测试工具，不接触它以为他不容易使用，接触后发现也就那么回事，利其器、善其事，科研的道路上不是只有公式和推理，还有更多的实验呀。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>久旱逢甘霖，您的支持是作者前进的不竭动力</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechat.jpg" alt="王立坤 微信支付"/>
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/images/alipay.jpg" alt="王立坤 支付宝"/>
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/11/17/regex-c/" rel="next" title="C++中的正则表达式regex">
+                <i class="fa fa-chevron-left"></i> C++中的正则表达式regex
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/11/29/scapy/" rel="prev" title="scapy伪造数据包模拟网络攻击行为">
+                scapy伪造数据包模拟网络攻击行为 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+      <div id="uyan_frame"></div>
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">王立坤</p>
+              <p class="site-description motion-element" itemprop="description">个人博客</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/rss2.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前期准备"><span class="nav-number">1.</span> <span class="nav-text">前期准备</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#吞吐量性能测试"><span class="nav-number">2.</span> <span class="nav-text">吞吐量性能测试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#脚本简化工作量"><span class="nav-number">3.</span> <span class="nav-text">脚本简化工作量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">4.</span> <span class="nav-text">小结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">王立坤</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+    
+
+    
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid=2148708"></script>
+      <!-- UY END -->
+    
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+
+
+
+  
+
+
+
+
+  
+  
+  
+  <link rel="stylesheet" href="/lib/algolia-instant-search/instantsearch.min.css">
+
+  
+  
+  <script src="/lib/algolia-instant-search/instantsearch.min.js"></script>
+  
+
+  <script src="/js/src/algolia-search.js?v=5.1.3"></script>
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("r6GYjXglMtJqYlR6mRTpjHFT-gzGzoHsz", "pa15vcmIA3oqXC7A2LADwYyn");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

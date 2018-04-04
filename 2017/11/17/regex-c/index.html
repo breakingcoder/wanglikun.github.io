@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+  <link rel="alternate" href="/rss2.xml" title="坤少" type="application/atom+xml" />
+
+
+
+
+
+
+<meta name="description" content="苍了个天了,C++中居然正则表达式的库regex，竟然之前都没听说过，更别说用了。先来感受一下它的威力。出个题目测试一下（来自codewars）。  A new task for you!You have to create a method, that corrects a given time string. There was a problem in addition, so many o">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++中的正则表达式regex">
+<meta property="og:url" content="http://prayallforyou.top/2017/11/17/regex-c/index.html">
+<meta property="og:site_name" content="坤少">
+<meta property="og:description" content="苍了个天了,C++中居然正则表达式的库regex，竟然之前都没听说过，更别说用了。先来感受一下它的威力。出个题目测试一下（来自codewars）。  A new task for you!You have to create a method, that corrects a given time string. There was a problem in addition, so many o">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2017-11-18T02:24:45.847Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="C++中的正则表达式regex">
+<meta name="twitter:description" content="苍了个天了,C++中居然正则表达式的库regex，竟然之前都没听说过，更别说用了。先来感受一下它的威力。出个题目测试一下（来自codewars）。  A new task for you!You have to create a method, that corrects a given time string. There was a problem in addition, so many o">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.3',
+    sidebar: {"position":"left","display":"hide","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '7MUQNB7OV7',
+      apiKey: '0519b903fd4116475fe9f60e0313cdce',
+      indexName: 'blog_prayallforyou.top',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"输入要搜索内容的关键字","hits_empty":"未找到 ${query} 的相关内容","hits_stats":"共发现 ${hits} 条符合条件的结果，耗时 ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://prayallforyou.top/2017/11/17/regex-c/"/>
+
+
+
+
+
+  <title>C++中的正则表达式regex | 坤少</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">坤少</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">A heart that loves is always young</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  
+  <div class="algolia-popup popup search-popup">
+    <div class="algolia-search">
+      <div class="algolia-search-input-icon">
+        <i class="fa fa-search"></i>
+      </div>
+      <div class="algolia-search-input" id="algolia-search-input"></div>
+    </div>
+
+    <div class="algolia-results">
+      <div id="algolia-stats"></div>
+      <div id="algolia-hits"></div>
+      <div id="algolia-pagination" class="algolia-pagination"></div>
+    </div>
+
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+  </div>
+
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://prayallforyou.top/2017/11/17/regex-c/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="王立坤">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="坤少">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">C++中的正则表达式regex</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-11-17T21:02:50+08:00">
+                2017-11-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+             <span id="/2017/11/17/regex-c/" class="leancloud_visitors" data-flag-title="C++中的正则表达式regex">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>苍了个天了,C++中居然正则表达式的库<strong>regex</strong>，竟然之前都没听说过，更别说用了。先来感受一下它的威力。出个题目测试一下（来自<a href="https://www.codewars.com/" target="_blank" rel="external">codewars</a>）。</p>
+<blockquote>
+<p>A new task for you!<br>You have to create a method, that corrects a given time string. There was a problem in addition, so many of the time strings are broken. Time-Format is european. So from “00:00:00” to “23:59:59”.<br>Some examples:<br>“09:10:01” -&gt; “09:10:01”<br>“11:70:10” -&gt; “12:10:10”<br>“19:99:99” -&gt; “20:40:39”<br>“24:01:01” -&gt; “00:01:01”<br>If the input-string is null or empty return exactly this value! (empty string for C++)<br>If the time-string-format is invalid, return null. (empty string for C++)</p>
+</blockquote>
+<p>相信看上面几个例子就明白了，就是给定一串字符，判断是不是正常的可读时间格式，如果字符为空或是格式不正确就返回空字符串，否则调整输入的字符串为正常的可读时间格式。</p>
+<p>没用正则式之前，我是这样写的，调试良久（智商捉急~~~）。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line">std::string correct(std::string timeString)</span><br><span class="line">&#123; </span><br><span class="line">    bool invalid(std::string str);</span><br><span class="line">    void process(std::string &amp;str);</span><br><span class="line">    //判断是否为空或是不合法</span><br><span class="line">    if(timeString.empty()||invalid(timeString))&#123;</span><br><span class="line">        return &quot;&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">    //如果合法，调整为正确格式</span><br><span class="line">    process(timeString);</span><br><span class="line">    return timeString;</span><br><span class="line">&#125;</span><br><span class="line">//调整时间格式</span><br><span class="line">void process(std::string &amp;time)&#123;</span><br><span class="line">    int second_high=0;   //进位符，秒数高位</span><br><span class="line">    int minute_low=0;    //进位符，分数低位</span><br><span class="line">    int minute_high=0;   //进位符，分数高位</span><br><span class="line">    int hour_low=0;      //进位符，小时数低位位</span><br><span class="line">    if(time[6]&gt;&apos;5&apos;)&#123;          //秒数是否需要调整</span><br><span class="line">        second_high=1;</span><br><span class="line">        time[6]-=6;</span><br><span class="line">    &#125;</span><br><span class="line">    if(time[4]+second_high&gt;&apos;9&apos;)&#123; //分钟数是否需要调整</span><br><span class="line">        minute_low=1;</span><br><span class="line">        time[4]-=9;</span><br><span class="line">    &#125;</span><br><span class="line">    else&#123;</span><br><span class="line">        time[4]+=second_high;</span><br><span class="line">    &#125;</span><br><span class="line">    if(time[3]+minute_low&gt;&apos;5&apos;)&#123;</span><br><span class="line">        minute_high=1;</span><br><span class="line">        if(minute_low)&#123;</span><br><span class="line">            time[3]-=5;</span><br><span class="line">        &#125;</span><br><span class="line">        else&#123;</span><br><span class="line">            time[3]-=6;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    else&#123;</span><br><span class="line">        time[3]+=minute_low;</span><br><span class="line">    &#125;</span><br><span class="line">    if(time[1]+minute_high&gt;&apos;9&apos;)&#123;  //小时数是否需要调整</span><br><span class="line">        hour_low=1;</span><br><span class="line">        time[1]-=9;</span><br><span class="line">    &#125;</span><br><span class="line">    else&#123;</span><br><span class="line">        time[1]+=minute_high;</span><br><span class="line">    &#125;</span><br><span class="line">    if(time[0]+hour_low&gt;&apos;1&apos;)&#123;</span><br><span class="line">        time[0]+=hour_low;</span><br><span class="line">        int num=time[1]-&apos;0&apos;+10*(time[0]-&apos;0&apos;);</span><br><span class="line">        int counts=num%24;</span><br><span class="line">        time[1]=&apos;0&apos;+counts%10;</span><br><span class="line">        time[0]=&apos;0&apos;+counts/10;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">//判断格式是否合法</span><br><span class="line">bool invalid(std::string time)&#123;</span><br><span class="line">    if(time.length()!=8)&#123;</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line">    for(int i=0;i&lt;8;i++)&#123;</span><br><span class="line">        if(i==2||i==5)&#123;</span><br><span class="line">            if(time[i]!=&apos;:&apos;)&#123;</span><br><span class="line">                return true;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        else&#123;</span><br><span class="line">             if(time[i]&lt;&apos;0&apos;||time[i]&gt;&apos;9&apos;)&#123;</span><br><span class="line">                 return true;</span><br><span class="line">             &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    return false;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>啰啰嗦嗦写了一大串，好在最后调通了，去讨论区看看别人家的代码，真心值得学习。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;regex&gt;</span><br><span class="line">#include &lt;string&gt;</span><br><span class="line"></span><br><span class="line">std::string correct(std::string timeString)</span><br><span class="line">&#123; </span><br><span class="line">    std::regex mask(&quot;(\\d\\d):(\\d\\d):(\\d\\d)&quot;);</span><br><span class="line">    std::cmatch cm;</span><br><span class="line">    </span><br><span class="line">    if (std::regex_match(timeString.c_str(),cm,mask))</span><br><span class="line">    &#123;</span><br><span class="line">      int h = atoi(cm[1].first);</span><br><span class="line">      int m = atoi(cm[2].first);</span><br><span class="line">      int s = atoi(cm[3].first);</span><br><span class="line">      </span><br><span class="line">      m += s/60;</span><br><span class="line">      h += m/60;</span><br><span class="line">      s %= 60;</span><br><span class="line">      m %= 60;</span><br><span class="line">      h %= 24;</span><br><span class="line">      </span><br><span class="line">      char result[9];</span><br><span class="line">      sprintf(result,&quot;%02d:%02d:%02d&quot;,h,m,s);</span><br><span class="line">      return std::string(result);</span><br><span class="line">      </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    return &quot;&quot;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>看看别人家的代码，才知道成长的路还很长。</p>
+<p>扯了这么多，接下来好好聊聊C++中的regex。标准的C++11库提供了对正则表达式的支持，位于regex头文件中。一个典型的正则式必须包含必要的参数：</p>
+<ul>
+<li>目标序列: 即要搜索的字符序列，一般有两个确定范围的迭代器表示，也接受C类型的字符串或是string类型。</li>
+<li>正则表达式: 即在目标序列中要查找的内容的模式，由符合正则语法的字符构成。</li>
+<li>匹配序列: 目标序列中符合正则表达式条件的匹配序列。</li>
+<li>替换字符串: 去替换匹配序列内容的字符串.</li>
+</ul>
+<p>regex库中实现了好多功能，具体参加<a href="http://www.cplusplus.com/reference/regex/" target="_blank" rel="external">C++ reference</a>,其中我们经常用到的不外乎三个：regex_match、regex_search、regex_replace。</p>
+<ul>
+<li><p>regex_match:匹配函数，成功匹配返回<em>true</em>，失败返回<em>false</em>。主要有三种形式。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">bool regex_match(const string &amp;str,const regex &amp;mask)//最简单，目标序列为一个字符串，正则表达式为mask</span><br><span class="line">bool regex_match(const string &amp;str.begin(), const string &amp;str.end(),const regex &amp;mask); //有迭代器指示目标序列的范围</span><br><span class="line">bool regex_match(const string &amp;str, cmatch cm, regex &amp;mask);//就匹配结果存放到cmath变量中。（参加上面的例子理解）</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>regex_search:获得匹配的字符串。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">// regex_search example</span><br><span class="line">#include &lt;iostream&gt;</span><br><span class="line">#include &lt;string&gt;</span><br><span class="line">#include &lt;regex&gt;</span><br><span class="line"></span><br><span class="line">int main ()</span><br><span class="line">&#123;</span><br><span class="line">  std::string s (&quot;this subject has a submarine as a subsequence&quot;);</span><br><span class="line">  std::smatch m;</span><br><span class="line">  std::regex e (&quot;\\b(sub)([^ ]*)&quot;);   // matches words beginning by &quot;sub&quot;</span><br><span class="line"></span><br><span class="line">  std::cout &lt;&lt; &quot;Target sequence: &quot; &lt;&lt; s &lt;&lt; std::endl;</span><br><span class="line">  std::cout &lt;&lt; &quot;Regular expression: /\\b(sub)([^ ]*)/&quot; &lt;&lt; std::endl;</span><br><span class="line">  std::cout &lt;&lt; &quot;The following matches and submatches were found:&quot; &lt;&lt; std::endl;</span><br><span class="line"></span><br><span class="line">  while (std::regex_search (s,m,e)) &#123;</span><br><span class="line">    for (auto x:m) std::cout &lt;&lt; x &lt;&lt; &quot; &quot;;</span><br><span class="line">    std::cout &lt;&lt; std::endl;</span><br><span class="line">    s = m.suffix().str();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>运行结果：</p>
+<blockquote>
+<p>Target sequence: this subject has a submarine as subsequence<br>Regular expression: /\b(sub)([^ ]*)/<br>The following matches and submatches were found:<br>subject sub ject<br>submarine sub marine<br> subsequence sub sequence</p>
+<ul>
+<li>regex_replace:替换匹配的字符串。<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">// regex_replace example</span><br><span class="line">#include &lt;iostream&gt;</span><br><span class="line">#include &lt;string&gt;</span><br><span class="line">#include &lt;regex&gt;</span><br><span class="line">#include &lt;iterator&gt;</span><br><span class="line"></span><br><span class="line">int main ()</span><br><span class="line">&#123;</span><br><span class="line">  std::string s (&quot;there is a subsequence in the string\n&quot;);</span><br><span class="line">  std::regex e (&quot;\\b(sub)([^ ]*)&quot;);   // matches words beginning by &quot;sub&quot;</span><br><span class="line"></span><br><span class="line">  // using string/c-string (3) version:</span><br><span class="line">  std::cout &lt;&lt; std::regex_replace (s,e,&quot;sub-$2&quot;);</span><br><span class="line"></span><br><span class="line">  // using range/c-string (6) version:</span><br><span class="line">  std::string result;</span><br><span class="line">  std::regex_replace (std::back_inserter(result), s.begin(), s.end(), e, &quot;$2&quot;);</span><br><span class="line">  std::cout &lt;&lt; result;</span><br><span class="line"></span><br><span class="line">  // with flags:</span><br><span class="line">  std::cout &lt;&lt; std::regex_replace (s,e,&quot;$1 and $2&quot;,std::regex_constants::format_no_copy);</span><br><span class="line">  std::cout &lt;&lt; std::endl;</span><br><span class="line"></span><br><span class="line">  return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</blockquote>
+<p>运行结果：</p>
+<blockquote>
+<p>there is a sub-sequence in the string<br>there is a sequence in the string<br>sub and sequence</p>
+</blockquote>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>久旱逢甘霖，您的支持是作者前进的不竭动力</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechat.jpg" alt="王立坤 微信支付"/>
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/images/alipay.jpg" alt="王立坤 支付宝"/>
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/11/14/consistenceinonos/" rel="next" title="SDN多控制器环境下的一致性分析（以ONOS为例）">
+                <i class="fa fa-chevron-left"></i> SDN多控制器环境下的一致性分析（以ONOS为例）
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/11/27/cben-tutorial/" rel="prev" title="SDN环境下使用cbench测试ryu控制器性能">
+                SDN环境下使用cbench测试ryu控制器性能 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+      <div id="uyan_frame"></div>
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">王立坤</p>
+              <p class="site-description motion-element" itemprop="description">个人博客</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/rss2.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          <div class="links-of-author motion-element">
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">王立坤</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.3</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+    
+
+    
+      <!-- UY BEGIN -->
+      <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid=2148708"></script>
+      <!-- UY END -->
+    
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+
+
+
+  
+
+
+
+
+  
+  
+  
+  <link rel="stylesheet" href="/lib/algolia-instant-search/instantsearch.min.css">
+
+  
+  
+  <script src="/lib/algolia-instant-search/instantsearch.min.js"></script>
+  
+
+  <script src="/js/src/algolia-search.js?v=5.1.3"></script>
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("r6GYjXglMtJqYlR6mRTpjHFT-gzGzoHsz", "pa15vcmIA3oqXC7A2LADwYyn");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
